@@ -34,7 +34,7 @@ A full-stack web application for restaurant table reservations and takeaway orde
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/restaurant-app.git
+   git clone https://github.com/SanthoshRaaj-KR/Aurum-Dining
    cd restaurant-app
    ```
 
@@ -142,8 +142,3 @@ A full-stack web application for restaurant table reservations and takeaway orde
 - User authentication
 - Real-time order tracking
 - Email notifications
-- Kitchen management system
-
-## License
-
-This project is licensed under the MIT License.
