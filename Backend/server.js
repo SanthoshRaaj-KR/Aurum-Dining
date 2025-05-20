@@ -6,19 +6,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Connect to MongoDB
+// Connecting to MongoDB 
 mongoose.connect("mongodb://127.0.0.1:27017/restaurantDB")
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-// ✅ Table Schema
+// Table Schema
 const tableSchema = new mongoose.Schema({
   number: Number,
   id: String,
 });
 const Table = mongoose.model("Table", tableSchema);
 
-// ✅ Reservation Schema
+// Reservation Schema
 const reservationSchema = new mongoose.Schema({
   orderId: String,
   fullName: String,
@@ -31,8 +31,7 @@ const reservationSchema = new mongoose.Schema({
 });
 const Reservation = mongoose.model("Reservation", reservationSchema);
 
-// ✅ Takeaway Order Schema
-// Modified TakeawayOrder Schema
+//  Takeaway Order Schema
 const takeawayOrderSchema = new mongoose.Schema({
     orderId: String,
     fullName: String,
@@ -41,25 +40,25 @@ const takeawayOrderSchema = new mongoose.Schema({
     items: [{ name: String, quantity: Number, price: Number }],
     subtotal: Number,
     tax: Number,
-    acTax: Number, // Added AC Tax (2%)
-    gst: Number,   // Added GST (8%)
+    acTax: Number, 
+    gst: Number,  
     deliveryCharge: Number,
     total: Number,
     createdAt: { type: Date, default: Date.now },
   });
 const TakeawayOrder = mongoose.model("TakeawayOrder", takeawayOrderSchema);
 
-// ✅ Fetch all tables
+// Fetch all tables
 app.get("/tables", async (req, res) => {
   try {
     const tables = await Table.find();
     res.json(tables);
-  } catch (error) {
+  }catch (error) {
     res.status(500).json({ message: "Error fetching tables", error });
   }
 });
 
-// ✅ Fetch reserved tables for a specific date & time
+// Fetch reserved tables for a specific date & time
 app.get("/reserved-tables", async (req, res) => {
   try {
     const { date, time } = req.query;
@@ -74,7 +73,7 @@ app.get("/reserved-tables", async (req, res) => {
   }
 });
 
-// ✅ Save a reservation with a unique order ID
+//  Save a reservation with a unique order ID
 app.post("/reserve", async (req, res) => {
   try {
     const { fullName, phone, email, date, time, guests, tables } = req.body;
@@ -92,7 +91,7 @@ app.post("/reserve", async (req, res) => {
       message: "Your table has been successfully reserved! Your reservation ID is " + orderId, 
       orderId 
     });
-  } catch (error) {
+  }catch (error) {
     console.error("Error saving reservation:", error);
     res.status(500).json({ 
       success: false, 
@@ -101,7 +100,7 @@ app.post("/reserve", async (req, res) => {
   }
 });
 
-// ✅ Fetch reservation by orderId
+// Fetch reservation by orderId
 app.get("/reservation/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -115,7 +114,7 @@ app.get("/reservation/:orderId", async (req, res) => {
   }
 });
 
-// ✅ Save a Takeaway Order
+// Save a Takeaway Order
 app.post("/takeaway", async (req, res) => {
   try {
     const { fullName, phone, address, items, subtotal, tax, acTax, gst, deliveryCharge, total } = req.body;
@@ -154,7 +153,7 @@ app.post("/takeaway", async (req, res) => {
   }
 });
 
-// ✅ Fetch takeaway order by orderId
+//  Fetch takeaway order by orderId
 app.get("/takeaway/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -168,9 +167,7 @@ app.get("/takeaway/:orderId", async (req, res) => {
   }
 });
 
-// Add this endpoint to your server.js file
-
-// ✅ Fetch orders by phone number
+// Fetch orders by phone number
 app.get("/orders-by-phone/:phone", async (req, res) => {
   try {
     const { phone } = req.params;
@@ -199,7 +196,7 @@ app.get("/orders-by-phone/:phone", async (req, res) => {
   }
 });
 
-// ✅ Delete reservation
+// Delete reservation
 app.delete("/reservation/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -229,7 +226,6 @@ app.delete("/reservation/:orderId", async (req, res) => {
     });
   }
 });
-// Add this new endpoint to your server.js file for handling reservation updates
 
 // Update reservation
 app.put("/update-reservation", async (req, res) => {
@@ -325,6 +321,6 @@ app.delete("/admin/takeaway-orders/:orderId", async (req, res) => {
 });
 
 
-// ✅ Start the server
+// Start the server
 const PORT = 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
