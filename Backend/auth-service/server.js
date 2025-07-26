@@ -2,11 +2,14 @@ import express from "express";
 import dotenv from "dotenv";
 import passport from "passport";
 import session from "express-session";
-import authRoutes from "./routes/auth.routes.js";
-import { connectDB } from "./config/db.js";
-import "./config/passport.js";
 
-dotenv.config();
+dotenv.config(); 
+
+
+import authRoutes from "./src/routes/auth.routes.js";
+import { connectDB } from "./src/config/db.js";
+import "./src/config/passport.js"; 
+
 connectDB();
 
 const app = express();
