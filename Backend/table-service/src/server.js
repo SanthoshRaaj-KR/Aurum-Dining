@@ -1,19 +1,24 @@
 import express from "express";
-import dotenv from "dotenv";
+import cors from "cors";
 import connectDB from "./config/db.js";
-import tableRoutes from "./routes/tableroutes.js";
+import initializeTables from "./utils/initializeTables.js";
 
-dotenv.config();
+import adminRoutes from "./routes/adminRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import reservationSync from "./routes/reservationSync.js";
+
 const app = express();
-const PORT = process.env.PORT || 5002;
+const PORT = 5002;
 
+app.use(cors());
 app.use(express.json());
-app.use("/api/tables", tableRoutes);
 
-app.get("/", (req, res) => res.send("🍽️ Table Service Running"));
+app.use("/admin/tables", adminRoutes);
+app.use("/tables", userRoutes);
+app.use("/reserved-tables", reservationSync);
 
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Table-Service running on port ${PORT}`);
-  });
+connectDB().then(() => initializeTables());
+
+app.listen(PORT, () => {
+  console.log(`Table Service running on port ${PORT}`);
 });
