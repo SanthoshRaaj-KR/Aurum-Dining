@@ -37,18 +37,27 @@ function Navbar() {
           <Link to="/order-takeaway" className="hover:text-[#8C7427] transition duration-300 cursor-pointer">
             Takeaway
           </Link>
-          
-          {/* Fixed Admin Button Alignment */}
+
+          {/* User Login Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 h-10 rounded-md font-medium transition-colors duration-300 flex items-center justify-center"
-            onClick={() => navigate('/admin-login')}
+            className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 h-10 rounded-md font-medium transition-colors duration-300"
+            onClick={() => navigate("/login")}
+          >
+            Login
+          </motion.button>
+
+          {/* Admin Login Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-gray-800 border border-yellow-500 text-yellow-400 px-4 py-2 h-10 rounded-md font-medium transition-colors duration-300"
+            onClick={() => navigate("/admin-login")}
           >
             Admin
           </motion.button>
         </div>
-
       </div>
     </nav>
   );

@@ -12,7 +12,8 @@ import UpdateOrDeleteOrder from "./components/UpdateDelete";
 import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
 import bgImage from "/images/hk-background.png";
-
+import Login from "./components/login";
+import SignUp from "./components/SignUp"
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -30,6 +31,8 @@ function AnimatedRoutes() {
         <Route path="/update-or-delete-order" element={<PageWrapper><UpdateOrDeleteOrder /></PageWrapper>} />
         <Route path="/admin-login" element={<PageWrapper><AdminLogin /></PageWrapper>} />
         <Route path="/admin-dashboard" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
       </Routes>
     </AnimatePresence>
   );
