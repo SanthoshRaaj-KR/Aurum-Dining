@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const reservationSchema = new mongoose.Schema({
   orderId: { type: String, required: true, unique: true },
+  userId: { type: String, required: true },
   fullName: { type: String, required: true },
   phone: { type: String, required: true },
   email: { type: String, required: true },
@@ -13,5 +14,8 @@ const reservationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
+
+// Add index for faster queries by userId
+reservationSchema.index({ userId: 1 });
 
 export default mongoose.model("Reservation", reservationSchema);

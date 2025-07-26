@@ -36,11 +36,11 @@ export const getReservedTables = async (req, res) => {
 // Create a new reservation
 export const createReservation = async (req, res) => {
   try {
-    const { fullName, phone, email, guests, date, time, tables } = req.body;
+    const { userId, fullName, phone, email, guests, date, time, tables } = req.body;
 
-    // Validate required fields
-    if (!fullName || !phone || !email || !guests || !date || !time || !tables || tables.length === 0) {
-      return res.status(400).json({ message: "All fields are required" });
+    // Validate required fields (now including userId)
+    if (!userId || !fullName || !phone || !email || !guests || !date || !time || !tables || tables.length === 0) {
+      return res.status(400).json({ message: "All fields including userId are required" });
     }
 
     // Check if tables are available
@@ -75,6 +75,7 @@ export const createReservation = async (req, res) => {
     // Create reservation
     const reservation = new Reservation({
       orderId,
+      userId,
       fullName,
       phone,
       email,
@@ -86,7 +87,7 @@ export const createReservation = async (req, res) => {
 
     await reservation.save();
 
-    // Update table statuses to reserved (optional, depends on your business logic)
+    // Update table statuses to reserved
     await Table.updateMany(
       { tableNumber: { $in: tables.map(t => parseInt(t)) } },
       { 
@@ -101,6 +102,7 @@ export const createReservation = async (req, res) => {
       orderId,
       reservation: {
         orderId,
+        userId,
         fullName,
         phone,
         email,
@@ -140,6 +142,25 @@ export const getAllReservations = async (req, res) => {
   } catch (error) {
     console.error('Error fetching reservations:', error);
     res.status(500).json({ message: "Error fetching reservations", error: error.message });
+  }
+};
+
+// Get reservations by user ID (for user profile)
+export const getReservationsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    
+    const reservations = await Reservation.find({ userId })
+      .sort({ createdAt: -1 });
+    
+    res.json(reservations);
+  } catch (error) {
+    console.error('Error fetching user reservations:', error);
+    res.status(500).json({ message: "Error fetching user reservations", error: error.message });
   }
 };
 

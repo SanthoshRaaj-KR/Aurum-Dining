@@ -1,4 +1,4 @@
-// routes/index.js - Create this file to organize all routes
+// routes/index.js - Updated routes without phone search
 import express from 'express';
 import Table from '../models/table.js';
 import Reservation from '../models/reservation.js';
@@ -132,10 +132,11 @@ router.get('/reserved-tables', async (req, res) => {
 
 router.post('/reserve', async (req, res) => {
   try {
-    const { fullName, phone, email, guests, date, time, tables } = req.body;
+    const { userId, fullName, phone, email, guests, date, time, tables } = req.body;
 
-    if (!fullName || !phone || !email || !guests || !date || !time || !tables || tables.length === 0) {
-      return res.status(400).json({ message: "All fields are required" });
+    // Validate required fields (now including userId)
+    if (!userId || !fullName || !phone || !email || !guests || !date || !time || !tables || tables.length === 0) {
+      return res.status(400).json({ message: "All fields including userId are required" });
     }
 
     // Check if tables are available
@@ -158,6 +159,7 @@ router.post('/reserve', async (req, res) => {
     // Create reservation
     const reservation = new Reservation({
       orderId,
+      userId,
       fullName,
       phone,
       email,
@@ -184,6 +186,7 @@ router.post('/reserve', async (req, res) => {
       orderId,
       reservation: {
         orderId,
+        userId,
         fullName,
         phone,
         email,
@@ -199,7 +202,8 @@ router.post('/reserve', async (req, res) => {
   }
 });
 
-router.get('/reservations', async (req, res) => {
+// Get all reservations (for admin only)
+router.get('/admin/reservations', async (req, res) => {
   try {
     const reservations = await Reservation.find().sort({ createdAt: -1 });
     res.json(reservations);
@@ -208,12 +212,40 @@ router.get('/reservations', async (req, res) => {
   }
 });
 
-router.get('/admin/reservations', async (req, res) => {
+// Get reservations by user ID (for user profile)
+router.get('/user/:userId/reservations', async (req, res) => {
   try {
-    const reservations = await Reservation.find().sort({ createdAt: -1 });
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+    
+    const reservations = await Reservation.find({ userId })
+      .sort({ createdAt: -1 });
+    
     res.json(reservations);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching reservations", error: error.message });
+    console.error('Error fetching user reservations:', error);
+    res.status(500).json({ message: "Error fetching user reservations", error: error.message });
+  }
+});
+
+// Get reservation by order ID
+router.get('/reservation/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    const reservation = await Reservation.findOne({ orderId });
+    
+    if (!reservation) {
+      return res.status(404).json({ message: "Reservation not found" });
+    }
+    
+    res.json(reservation);
+  } catch (error) {
+    console.error('Error fetching reservation:', error);
+    res.status(500).json({ message: "Error fetching reservation", error: error.message });
   }
 });
 

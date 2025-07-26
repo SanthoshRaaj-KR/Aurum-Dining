@@ -24,6 +24,12 @@ const TableSelection = () => {
     agree: false,
   });
 
+  // Get current user ID from localStorage (assuming it's stored there after login)
+  const getCurrentUserId = () => {
+    // You should replace this with your actual user authentication logic
+    return localStorage.getItem('userId') || localStorage.getItem('currentUserId');
+  };
+
   // Check for update data in localStorage
   useEffect(() => {
     const storedUpdateData = localStorage.getItem("updateOrderData");
@@ -125,11 +131,20 @@ const TableSelection = () => {
       alert("Please select at least one table to reserve.");
       return;
     }
-  
+
+    // Get current user ID
+    const userId = getCurrentUserId();
+    if (!userId) {
+      alert("Please log in to make a reservation.");
+      navigate("/login");
+      return;
+    }
+
     const effectiveDate = isUpdateMode && updateData ? updateData.date : date;
     const effectiveTime = isUpdateMode && updateData ? updateData.time : time;
     
     const reservationData = {
+      userId, // Include userId in reservation data
       fullName: formData.fullName,
       phone: formData.phone,
       email: formData.email,
@@ -174,7 +189,11 @@ const TableSelection = () => {
       localStorage.removeItem("updateOrderData");
     } catch (err) {
       console.error("Error:", err);
-      alert("Reservation failed. Try again.");
+      if (err.response?.data?.message) {
+        alert(err.response.data.message);
+      } else {
+        alert("Reservation failed. Try again.");
+      }
     }
   };
 
