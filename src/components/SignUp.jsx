@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -13,23 +15,48 @@ const Signup = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     setError("");
-    
-    // Example placeholder:
-    if (form.name && form.email && form.password) {
-      console.log("Signup successful (placeholder)");
+
+    try {
+      const res = await axios.post(
+        "http://localhost:5001/api/auth/register", // NOTE: fix route prefix if needed
+        form,
+        { withCredentials: true } // ✅ ADD THIS
+      );
+
+      localStorage.setItem("token", res.data.token);
       navigate("/login");
-    } else {
-      setError("Please fill in all fields.");
+    } catch (err) {
+      setError(
+        err?.response?.data?.message || "Signup failed. Please try again."
+      );
     }
+  };
+
+const handleGoogleSuccess = async (credentialResponse) => {
+  try {
+    const res = await axios.post("http://localhost:5001/api/auth/google-auth", {
+      credential: credentialResponse.credential,
+    }, { withCredentials: true });
+
+    localStorage.setItem("token", res.data.token);
+    navigate("/");
+  } catch (err) {
+    setError("Google signup failed. Try again.");
+    console.error("Google Auth Error:", err);
+  }
+};
+
+
+  const handleGoogleFailure = () => {
+    setError("Google login was cancelled or failed.");
   };
 
   return (
     <div
       className="flex flex-col sm:flex-row items-center justify-center min-h-screen bg-cover bg-center px-8 pt-24"
-
       style={{ backgroundImage: `url('/images/loginBackground.png')` }}
     >
-      <div className="flex flex-col w-full max-w-md px-4 sm:px-8 py-8 bg-opacity-70 rounded-xl"> 
+      <div className="flex flex-col w-full max-w-md px-4 sm:px-8 py-8 bg-opacity-70 rounded-xl">
         <h1 className="text-6xl sm:text-7xl font-bold mb-8 text-white text-center">Sign Up</h1>
 
         {error && (
@@ -51,7 +78,6 @@ const Signup = () => {
             placeholder="Enter your full name"
             value={form.name}
             onChange={handleChange}
-            // Input fields retain their semi-transparent background
             className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500"
             required
           />
@@ -64,7 +90,6 @@ const Signup = () => {
             placeholder="Enter your email"
             value={form.email}
             onChange={handleChange}
-            // Input fields retain their semi-transparent background
             className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500"
             required
           />
@@ -77,7 +102,6 @@ const Signup = () => {
             placeholder="Create a password"
             value={form.password}
             onChange={handleChange}
-            // Input fields retain their semi-transparent background
             className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500"
             required
           />
@@ -90,17 +114,24 @@ const Signup = () => {
           >
             Sign Up
           </motion.button>
-
-          <p className="text-lg text-center text-white mt-6">
-            Already have an account?{" "}
-            <span
-              className="text-yellow-500 cursor-pointer hover:underline font-semibold"
-              onClick={() => navigate("/login")}
-            >
-              Login here
-            </span>
-          </p>
         </form>
+
+        <div className="flex justify-center mt-6">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleFailure}
+          />
+        </div>
+
+        <p className="text-lg text-center text-white mt-6">
+          Already have an account?{" "}
+          <span
+            className="text-yellow-500 cursor-pointer hover:underline font-semibold"
+            onClick={() => navigate("/login")}
+          >
+            Login here
+          </span>
+        </p>
       </div>
     </div>
   );

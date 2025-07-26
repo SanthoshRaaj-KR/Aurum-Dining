@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import loginBackground from "/images/loginBackground.png"
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -14,25 +16,37 @@ const Login = () => {
     e.preventDefault();
     setError("");
 
-    // TODO: Implement actual login logic (send POST request to backend)
-    // Example placeholder:
-    if (form.email === "test@example.com" && form.password === "password") {
-      console.log("Login successful (placeholder)");
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/login`,
+        form
+      );
+      localStorage.setItem("token", res.data.token);
       navigate("/");
-    } else {
-      setError("Invalid email or password. Please try again.");
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid email or password.");
+    }
+  };
+
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/google`,
+        { token: credentialResponse.credential }
+      );
+      localStorage.setItem("token", res.data.token);
+      navigate("/");
+    } catch (err) {
+      setError("Google login failed.");
     }
   };
 
   return (
     <div
       className="flex flex-col sm:flex-row items-center justify-center min-h-screen bg-cover bg-center px-8 pt-24"
-      // Use the provided image URL as the background
       style={{ backgroundImage: `url('/images/loginBackground.png')` }}
     >
-      {/* Container for the form with transparent background */}
-      <div className="flex justify-center items-center w-full max-w-2xl  bg-opacity-70 p-8 rounded-xl ">
-        {/* Login Form */}
+      <div className="flex justify-center items-center w-full max-w-2xl bg-opacity-70 p-8 rounded-xl">
         <div className="flex flex-col w-full px-4 sm:px-8">
           <h1 className="text-6xl sm:text-7xl font-bold mb-8 text-white text-center">User Login</h1>
 
@@ -55,7 +69,7 @@ const Login = () => {
               placeholder="Enter your email"
               value={form.email}
               onChange={handleChange}
-              className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500" // Added bg-opacity-50 and placeholder color
+              className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500"
               required
             />
 
@@ -67,7 +81,7 @@ const Login = () => {
               placeholder="Enter your password"
               value={form.password}
               onChange={handleChange}
-              className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500" // Added bg-opacity-50 and placeholder color
+              className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500"
               required
             />
 
@@ -79,17 +93,25 @@ const Login = () => {
             >
               Login
             </motion.button>
-
-            <p className="text-lg text-center text-white mt-6">
-              Don't have an account?{" "}
-              <span
-                className="text-yellow-500 cursor-pointer hover:underline font-semibold"
-                onClick={() => navigate("/signup")}
-              >
-                Sign Up here
-              </span>
-            </p>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-white mb-2 text-lg">OR</p>
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => setError("Google Login Failed")}
+            />
+          </div>
+
+          <p className="text-lg text-center text-white mt-6">
+            Don't have an account?{" "}
+            <span
+              className="text-yellow-500 cursor-pointer hover:underline font-semibold"
+              onClick={() => navigate("/signup")}
+            >
+              Sign Up here
+            </span>
+          </p>
         </div>
       </div>
     </div>
