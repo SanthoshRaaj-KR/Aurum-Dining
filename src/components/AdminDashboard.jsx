@@ -47,7 +47,7 @@ const AdminDashboard = () => {
   
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/admin/takeaway-orders');
+      const response = await axios.get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/takeaway-orders`);
       setOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -56,7 +56,7 @@ const AdminDashboard = () => {
   
   const fetchReservations = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/admin/reservations');
+      const response = await axios.get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/reservations`);
       setReservations(response.data);
     } catch (error) {
       console.error('Error fetching reservations:', error);
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
 
   const fetchTables = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/admin/tables');
+      const response = await axios.get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/tables`);
       setTables(response.data);
     } catch (error) {
       console.error('Error fetching tables:', error);
@@ -87,14 +87,14 @@ const AdminDashboard = () => {
   const handleConfirmDelete = async () => {
     try {
       if (deleteType === 'order') {
-        await axios.delete(`http://localhost:5001/admin/takeaway-orders/${itemToDelete}`);
+        await axios.delete(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/takeaway-orders/${itemToDelete}`);
         fetchOrders();
       } else if (deleteType === 'reservation') {
-        await axios.delete(`http://localhost:5001/admin/reservations/${itemToDelete}`);
+        await axios.delete(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/reservations/${itemToDelete}`);
         fetchReservations();
         fetchTables(); // Refresh tables to update status
       } else if (deleteType === 'table') {
-        await axios.delete(`http://localhost:5001/admin/tables/${itemToDelete}`);
+        await axios.delete(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/tables/${itemToDelete}`);
         fetchTables();
       }
       setShowConfirmation(false);
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
 
   const handleTableStatusChange = async (tableNumber, newStatus) => {
     try {
-      await axios.put(`http://localhost:5001/admin/tables/${tableNumber}/status`, {
+      await axios.put(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/tables/${tableNumber}/status`, {
         status: newStatus
       });
       fetchTables();
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
   const handleAddTable = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5001/admin/tables', newTable);
+      await axios.post(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/tables`, newTable);
       setNewTable({
         tableNumber: '',
         capacity: 2,

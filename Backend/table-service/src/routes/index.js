@@ -1,4 +1,4 @@
-// routes/index.js - Updated routes without phone search
+// routes/index.js - Fixed routes without conflicts
 import express from 'express';
 import Table from '../models/table.js';
 import Reservation from '../models/reservation.js';
@@ -92,8 +92,8 @@ router.delete('/admin/tables/:tableNumber', async (req, res) => {
   }
 });
 
-// User table routes
-router.get('/user/tables', async (req, res) => {
+// FIXED: Changed from '/user/tables' to '/users/tables' to avoid conflict
+router.get('/users/tables', async (req, res) => {
   try {
     const tables = await Table.find({ status: { $in: ["available", "reserved"] } }).sort({ tableNumber: 1 });
     res.json(tables);
@@ -212,16 +212,16 @@ router.get('/admin/reservations', async (req, res) => {
   }
 });
 
-// Get reservations by user ID (for user profile)
-router.get('/user/:userId/reservations', async (req, res) => {
+// FIXED: Now this route won't conflict with '/users/tables'
+router.get('/user/:user_id/reservations', async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { user_id } = req.params;
     
-    if (!userId) {
+    if (!user_id) {
       return res.status(400).json({ message: "User ID is required" });
     }
     
-    const reservations = await Reservation.find({ userId })
+    const reservations = await Reservation.find({ userId: user_id })
       .sort({ createdAt: -1 });
     
     res.json(reservations);

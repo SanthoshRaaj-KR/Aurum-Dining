@@ -35,7 +35,7 @@ const UserProfile = () => {
   const fetchUserReservations = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5001/user/${userId}/reservations`);
+      const response = await axios.get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/user/${userId}/reservations`);
       setReservations(response.data);
     } catch (error) {
       console.error('Error fetching user reservations:', error);
@@ -60,7 +60,7 @@ const UserProfile = () => {
     
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5001/reservation/${reservationToCancel.orderId}`);
+      await axios.delete(`${import.meta.env.VITE_TABLE_SERVICE_URL}/reservation/${reservationToCancel.orderId}`);
       
       // Remove the cancelled reservation from the local state
       setReservations(prevReservations => 

@@ -149,7 +149,7 @@ function Takeaway() {
         total: total
       };
       
-      const response = await fetch('http://localhost:5001/takeaway', {
+      const response = await fetch(`${import.meta.env.VITE_TABLE_SERVICE_URL}/takeaway`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

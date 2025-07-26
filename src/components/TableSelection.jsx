@@ -60,6 +60,8 @@ const TableSelection = () => {
 
   // Load tables and reserved tables
   useEffect(() => {
+    console.log("VITE_TABLE_SERVICE_URL:", import.meta.env.VITE_TABLE_SERVICE_URL);
+    
     const effectiveDate = isUpdateMode && updateData ? updateData.date : date;
     const effectiveTime = isUpdateMode && updateData ? updateData.time : time;
     
@@ -71,13 +73,19 @@ const TableSelection = () => {
     }
 
     // Fetch all available tables
-    axios.get("http://localhost:5001/tables").then((response) => {
-      setTables(response.data);
-    });
+    axios.get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/tables`)
+      .then((response) => {
+        console.log("Tables response:", response.data);
+        setTables(response.data);
+      })
+      .catch(error => {
+        console.error("Error fetching tables:", error);
+        setTables([]); // Ensure tables is always an array
+      });
 
     // Fetch reserved tables for the given date and time
     axios
-      .get(`http://localhost:5001/reserved-tables?date=${effectiveDate}&time=${effectiveTime}`)
+      .get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/reserved-tables?date=${effectiveDate}&time=${effectiveTime}`)
       .then((response) => {
         let allReservedTables = response.data;
         
@@ -91,6 +99,7 @@ const TableSelection = () => {
       })
       .catch(error => {
         console.error("Error fetching reserved tables:", error);
+        setReservedTables([]); // Ensure reservedTables is always an array
       });
   }, [date, time, navigate, isUpdateMode, updateData]);
 
@@ -156,8 +165,8 @@ const TableSelection = () => {
 
     try {
       if (isUpdateMode && originalOrderId) {
-        await axios.delete(`http://localhost:5001/reservation/${originalOrderId}`);
-        const response = await axios.post("http://localhost:5001/reserve", reservationData);
+        await axios.delete(`${import.meta.env.VITE_TABLE_SERVICE_URL}/reservation/${originalOrderId}`);
+        const response = await axios.post(`${import.meta.env.VITE_TABLE_SERVICE_URL}/reserve`, reservationData);
         const { orderId } = response.data;
         
         if (!orderId) {
@@ -173,7 +182,7 @@ const TableSelection = () => {
           },
         });
       } else {
-        const response = await axios.post("http://localhost:5001/reserve", reservationData);
+        const response = await axios.post(`${import.meta.env.VITE_TABLE_SERVICE_URL}/reserve`, reservationData);
         const { orderId } = response.data;
         
         if (!orderId) {
@@ -336,7 +345,7 @@ const TableSelection = () => {
         {/* Main Dining Area */}
         <div className="absolute inset-6 top-28 bottom-32 bg-white/20 rounded-xl border-2 border-dashed border-amber-300">
           {/* Tables */}
-          {tables.map((table) => (
+          {Array.isArray(tables) && tables.map((table) => (
             <TableComponent key={table._id || table.id} table={table} />
           ))}
         </div>

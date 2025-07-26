@@ -20,7 +20,7 @@ function OrderConfirmation() {
 
       try {
         // Using the full URL without proxy
-        const response = await fetch(`http://localhost:5001/takeaway/${orderId}`);
+        const response = await fetch(`${import.meta.env.VITE_TABLE_SERVICE_URL}/takeaway/${orderId}`);
         
         if (!response.ok) {
           throw new Error("Failed to fetch order details");
