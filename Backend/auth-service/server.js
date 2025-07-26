@@ -15,8 +15,14 @@ const app = express();
 
 
 app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
+  origin: [
+    "http://localhost:3000", 
+    "http://localhost:5173", // Vite default port
+    "https://accounts.google.com" // Allow Google OAuth
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 
 app.use(express.json());

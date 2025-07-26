@@ -18,43 +18,48 @@ const Signup = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5001/api/auth/register",
+        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/register`, // ✅ Fixed URL
         form,
         { withCredentials: true } 
       );
 
-      localStorage.setItem("accessToken", res.data.accessToken); 
-      localStorage.setItem("user", JSON.stringify(res.data.user)); 
-
+      // ✅ Standard signup just creates account, doesn't log in
       navigate("/login");
     } catch (err) {
       setError(
-        err?.response?.data?.message || "Signup failed. Please try again."
+        err?.response?.data?.message || err?.response?.data?.msg || "Signup failed. Please try again."
       );
     }
   };
 
-const handleGoogleSuccess = async (response) => {
-  try {
-    const res = await axios.post(
-      `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/google-auth`,
-      { token: response.credential }, // ✅ Change from 'credential' to 'token'
-      { withCredentials: true }
-    );
+  // ✅ Fixed Google Success Handler
+  const handleGoogleSuccess = async (response) => {
+    try {
+      console.log("Google credential received:", response);
+      
+      const res = await axios.post(
+        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/google-auth`,
+        { credential: response.credential }, // ✅ Fixed parameter name
+        { 
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-    console.log("Google Login Success", res.data);
-    localStorage.setItem("accessToken", res.data.accessToken);
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-    navigate("/");
-  } catch (err) {
-    console.error("Google Auth Error:", err);
-    setError("Google authentication failed. Please try again.");
-  }
-};
+      console.log("Google Login Success", res.data);
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      navigate("/");
+    } catch (err) {
+      console.error("Google Auth Error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Google authentication failed. Please try again.");
+    }
+  };
 
-
-
-  const handleGoogleFailure = () => {
+  const handleGoogleFailure = (error) => {
+    console.error("Google OAuth Error:", error);
     setError("Google login was cancelled or failed.");
   };
 
@@ -124,9 +129,16 @@ const handleGoogleSuccess = async (response) => {
         </form>
 
         <div className="flex justify-center mt-6">
+          {/* ✅ Enhanced GoogleLogin configuration */}
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleFailure}
+            useOneTap={false}
+            auto_select={false}
+            theme="filled_blue"
+            size="large"
+            text="signup_with"
+            shape="rectangular"
           />
         </div>
 

@@ -8,7 +8,8 @@ export const verifyAccessToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    req.userId = decoded.id;
+    req.userId = decoded.id; // ✅ Make sure this matches your token payload
+    req.user = decoded; // ✅ Also set req.user for consistency
     next();
   } catch (err) {
     return res.status(403).json({ message: "Invalid or expired token" });

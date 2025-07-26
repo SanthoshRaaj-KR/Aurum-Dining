@@ -12,31 +12,14 @@ const Login = () => {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-const handleLogin = async (e) => {
-  e.preventDefault();
-  setError("");
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  try {
-    const res = await axios.post(
-      `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/login`,
-      form,
-      { withCredentials: true }
-    );
-
-    localStorage.setItem("accessToken", res.data.accessToken);
-    localStorage.setItem("user", JSON.stringify(res.data.user));
-    navigate("/");
-    } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password.");
-    }
-  };
-
-
-  const handleGoogleLogin = async (credentialResponse) => {
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/google-auth`,
-        { token: credentialResponse.credential },
+        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/login`,
+        form,
         { withCredentials: true }
       );
 
@@ -44,8 +27,39 @@ const handleLogin = async (e) => {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/");
     } catch (err) {
-      setError("Google login failed.");
+      setError(err.response?.data?.message || "Invalid email or password.");
     }
+  };
+
+  // ✅ Fixed Google Login Handler
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      console.log("Google credential received:", credentialResponse);
+      
+      const res = await axios.post(
+        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/google-auth`,
+        { credential: credentialResponse.credential }, // ✅ Fixed parameter name
+        { 
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log("Backend response:", res.data);
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      navigate("/");
+    } catch (err) {
+      console.error("Google login error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Google login failed.");
+    }
+  };
+
+  const handleGoogleError = (error) => {
+    console.error("Google OAuth Error:", error);
+    setError("Google login failed. Please try again.");
   };
 
   return (
@@ -104,9 +118,16 @@ const handleLogin = async (e) => {
 
           <div className="mt-6 text-center">
             <p className="text-white mb-2 text-lg">OR</p>
+            {/* ✅ Enhanced GoogleLogin configuration */}
             <GoogleLogin
               onSuccess={handleGoogleLogin}
-              onError={() => setError("Google Login Failed")}
+              onError={handleGoogleError}
+              useOneTap={false}
+              auto_select={false}
+              theme="filled_blue"
+              size="large"
+              text="signin_with"
+              shape="rectangular"
             />
           </div>
 
