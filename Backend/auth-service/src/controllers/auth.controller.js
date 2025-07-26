@@ -1,64 +1,50 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
-import {OAuth2Client}  from "google-auth-library";
+import { OAuth2Client } from "google-auth-library";
 import { sendTokens } from "../utils/sendTokens.js";
+import { generateAccessToken, generateRefreshToken } from "../utils/generateTokens.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+let refreshTokens = []; // in-memory for dev
 
-const generateAccessToken = (user) => {
-  return jwt.sign(
-    { id: user._id, isAdmin: user.isAdmin },
-    process.env.JWT_SECRET,
-    { expiresIn: "15m" }
-  );
-};
-
-const generateRefreshToken = (user) => {
-  return jwt.sign(
-    { id: user._id },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: "7d" }
-  );
-};
-
-let refreshTokens = []; // In-memory, for dev only
-
+// ✅ Unified Google Login / Register
 export const googleAuth = async (req, res) => {
-  try {
-    const { credential } = req.body;
+  const { credential } = req.body; // ✅ Frontend sends "credential" not "token"
 
-    // Step 1: Verify Google token
+  if (!credential) {
+    return res.status(400).json({ message: "Missing Google credential" });
+  }
+
+  try {
     const ticket = await client.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
-    const { email, name } = payload;
+    const { email, name, sub: googleId, picture } = payload;
 
-    // Step 2: Check if user exists, else create
     let user = await User.findOne({ email });
     if (!user) {
       user = await User.create({
         name,
         email,
-        password: "GOOGLE_AUTH", // dummy password or flag
+        googleId,
+        profilePic: picture,
+        password: "GOOGLE_AUTH", // placeholder
       });
     }
 
-    // Step 3: Send tokens using your utility
     sendTokens(user, res);
-
   } catch (err) {
-    console.error("Google Auth error:", err);
-    res.status(401).json({ message: "Google signup/login failed" });
+    console.error("Google Auth error:", err.message);
+    res.status(401).json({ message: "Google login/signup failed" });
   }
 };
 
-
-
+// ✅ Standard Signup
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -68,7 +54,7 @@ export const signup = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const user = new User({ name, email, password: hashed, isAdmin: false }); // default: false
+    const user = new User({ name, email, password: hashed, isAdmin: false });
     await user.save();
 
     res.status(201).json({ message: "Signup success" });
@@ -77,6 +63,7 @@ export const signup = async (req, res) => {
   }
 };
 
+// ✅ Standard Login
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -87,30 +74,13 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-    refreshTokens.push(refreshToken);
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "Strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.json({
-      accessToken,
-      user: {
-        name: user.name,
-        email: user.email,
-        isAdmin: user.isAdmin,
-      },
-    });
+    sendTokens(user, res);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+// ✅ Refresh Token Handler
 export const refresh = (req, res) => {
   const token = req.cookies.refreshToken;
   if (!token) return res.status(401).json({ msg: "No token" });
@@ -124,4 +94,14 @@ export const refresh = (req, res) => {
     const newAccessToken = generateAccessToken({ _id: user.id, isAdmin: user.isAdmin });
     res.json({ accessToken: newAccessToken });
   });
+};
+
+// ✅ Get Current User Info
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    res.status(200).json({ user });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 };

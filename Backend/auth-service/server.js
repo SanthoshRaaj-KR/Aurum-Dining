@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import passport from "passport";
 import session from "express-session";
-
+import helmet from "helmet"
 import authRoutes from "./src/routes/auth.routes.js";
 import { connectDB } from "./src/config/db.js";
 import "./src/config/passport.js";
@@ -20,6 +20,11 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+app.use(helmet({
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
+}))
 
 app.use(session({
   secret: "random",

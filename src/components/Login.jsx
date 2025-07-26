@@ -12,29 +12,36 @@ const Login = () => {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setError("");
 
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/login`,
-        form
-      );
-      localStorage.setItem("token", res.data.token);
-      navigate("/");
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/login`,
+      form,
+      { withCredentials: true }
+    );
+
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+    navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password.");
     }
   };
 
+
   const handleGoogleLogin = async (credentialResponse) => {
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/google`,
-        { token: credentialResponse.credential }
+        `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/google-auth`,
+        { token: credentialResponse.credential },
+        { withCredentials: true }
       );
-      localStorage.setItem("token", res.data.token);
+
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/");
     } catch (err) {
       setError("Google login failed.");

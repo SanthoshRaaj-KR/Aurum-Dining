@@ -18,12 +18,14 @@ const Signup = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5001/api/auth/register", // NOTE: fix route prefix if needed
+        "http://localhost:5001/api/auth/register",
         form,
-        { withCredentials: true } // ✅ ADD THIS
+        { withCredentials: true } 
       );
 
-      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("accessToken", res.data.accessToken); 
+      localStorage.setItem("user", JSON.stringify(res.data.user)); 
+
       navigate("/login");
     } catch (err) {
       setError(
@@ -32,19 +34,24 @@ const Signup = () => {
     }
   };
 
-const handleGoogleSuccess = async (credentialResponse) => {
+const handleGoogleSuccess = async (response) => {
   try {
-    const res = await axios.post("http://localhost:5001/api/auth/google-auth", {
-      credential: credentialResponse.credential,
-    }, { withCredentials: true });
+    const res = await axios.post(
+      `${import.meta.env.VITE_AUTH_SERVICE_URL}/api/auth/google-auth`,
+      { token: response.credential }, // ✅ Change from 'credential' to 'token'
+      { withCredentials: true }
+    );
 
-    localStorage.setItem("token", res.data.token);
+    console.log("Google Login Success", res.data);
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
     navigate("/");
   } catch (err) {
-    setError("Google signup failed. Try again.");
     console.error("Google Auth Error:", err);
+    setError("Google authentication failed. Please try again.");
   }
 };
+
 
 
   const handleGoogleFailure = () => {
