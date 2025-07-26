@@ -25,6 +25,7 @@ const Login = () => {
 
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+      window.dispatchEvent(new Event("storage"));
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Invalid email or password.");
@@ -50,6 +51,7 @@ const Login = () => {
       console.log("Backend response:", res.data);
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+      window.dispatchEvent(new Event("storage"));
       navigate("/");
     } catch (err) {
       console.error("Google login error:", err.response?.data || err.message);
@@ -64,25 +66,25 @@ const Login = () => {
 
   return (
     <div
-      className="flex flex-col sm:flex-row items-center justify-center min-h-screen bg-cover bg-center px-8 pt-24"
-      style={{ backgroundImage: `url('/images/loginBackground.png')` }}
+      className="flex flex-col sm:flex-row items-center justify-center min-h-screen bg-cover bg-center px-4 py-12 sm:px-8 sm:py-24 font-sans" // Added font-sans
+      style={{ backgroundImage: `url('/images/loginBackground.png')` }} 
     >
-      <div className="flex justify-center items-center w-full max-w-2xl bg-opacity-70 p-8 rounded-xl">
-        <div className="flex flex-col w-full px-4 sm:px-8">
-          <h1 className="text-6xl sm:text-7xl font-bold mb-8 text-white text-center">User Login</h1>
+      <div className="flex justify-center items-center w-full max-w-md sm:max-w-xl lg:max-w-2xl  bg-opacity-80 backdrop-blur-sm p-8 sm:p-12 rounded-2xl "> {/* Enhanced card styling */}
+        <div className="flex flex-col w-full">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-8 text-white text-center tracking-tight">User Login</h1> {/* Larger, bolder title */}
 
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-600 text-white p-4 mb-4 rounded-md text-lg text-center"
+              className="bg-red-600 text-white p-4 mb-6 rounded-lg text-lg text-center shadow-md" // Enhanced error message
             >
               {error}
             </motion.div>
           )}
 
           <form onSubmit={handleLogin} className="flex flex-col">
-            <label htmlFor="email" className="text-white text-2xl sm:text-3xl mb-2">Email</label>
+            <label htmlFor="email" className="text-white text-xl sm:text-2xl mb-2 font-medium">Email</label>
             <input
               id="email"
               name="email"
@@ -90,11 +92,11 @@ const Login = () => {
               placeholder="Enter your email"
               value={form.email}
               onChange={handleChange}
-              className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500"
+              className="p-3 sm:p-4 border border-gray-600 rounded-lg mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-60 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300" // Enhanced input styling
               required
             />
 
-            <label htmlFor="password" className="text-white text-2xl sm:text-3xl mb-2">Password</label>
+            <label htmlFor="password" className="text-white text-xl sm:text-2xl mb-2 font-medium">Password</label>
             <input
               id="password"
               name="password"
@@ -102,39 +104,41 @@ const Login = () => {
               placeholder="Enter your password"
               value={form.password}
               onChange={handleChange}
-              className="p-3 sm:p-4 border border-gray-700 rounded-md mb-6 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-50 text-white placeholder-gray-300 focus:outline-none focus:border-yellow-500"
+              className="p-3 sm:p-4 border border-gray-600 rounded-lg mb-8 w-full text-lg sm:text-xl bg-gray-900 bg-opacity-60 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300" // Enhanced input styling
               required
             />
 
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="mt-4 p-3 sm:p-4 bg-yellow-500 text-black text-xl sm:text-2xl rounded-md w-full hover:bg-yellow-600 font-semibold transition-colors duration-300"
+              whileHover={{ scale: 1.02, boxShadow: "0 8px 20px rgba(253, 224, 71, 0.4)" }} // Enhanced hover effect
+              whileTap={{ scale: 0.98 }}
+              className="mt-4 p-3 sm:p-4 bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 text-xl sm:text-2xl rounded-lg w-full font-bold shadow-lg hover:from-yellow-500 hover:to-yellow-700 transition-all duration-300 transform hover:-translate-y-0.5" // Enhanced button styling
               type="submit"
             >
               Login
             </motion.button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-white mb-2 text-lg">OR</p>
+          <div className="mt-8 text-center">
+            <p className="text-white mb-4 text-xl font-medium">OR</p>
             {/* ✅ Enhanced GoogleLogin configuration */}
-            <GoogleLogin
-              onSuccess={handleGoogleLogin}
-              onError={handleGoogleError}
-              useOneTap={false}
-              auto_select={false}
-              theme="filled_blue"
-              size="large"
-              text="signin_with"
-              shape="rectangular"
-            />
+            <div className="flex justify-center"> {/* Centering Google button */}
+                <GoogleLogin
+                    onSuccess={handleGoogleLogin}
+                    onError={handleGoogleError}
+                    useOneTap={false}
+                    auto_select={false}
+                    theme="filled_blue"
+                    size="large"
+                    text="signin_with"
+                    shape="rectangular"
+                />
+            </div>
           </div>
 
-          <p className="text-lg text-center text-white mt-6">
+          <p className="text-lg sm:text-xl text-center text-white mt-8">
             Don't have an account?{" "}
             <span
-              className="text-yellow-500 cursor-pointer hover:underline font-semibold"
+              className="text-yellow-400 cursor-pointer hover:underline font-semibold hover:text-yellow-300 transition-colors duration-200" // Enhanced link styling
               onClick={() => navigate("/signup")}
             >
               Sign Up here
