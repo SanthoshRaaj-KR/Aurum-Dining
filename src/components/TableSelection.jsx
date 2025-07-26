@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import bgImage from "/images/hk-background.png";
-import Navbar from "./Navbar";
 
 const TableSelection = () => {
   const location = useLocation();
@@ -24,24 +22,17 @@ const TableSelection = () => {
     agree: false,
   });
 
-  // First useEffect - Check for update data in localStorage
+  // Check for update data in localStorage
   useEffect(() => {
     const storedUpdateData = localStorage.getItem("updateOrderData");
     
     if (storedUpdateData) {
       try {
         const parsedData = JSON.parse(storedUpdateData);
-        
-        // Set update mode flag
         setIsUpdateMode(true);
-        
-        // Store the update data
         setUpdateData(parsedData);
-        
-        // Store the original order ID for later use
         setOriginalOrderId(parsedData.orderId);
         
-        // Pre-fill form fields
         setFormData({
           fullName: parsedData.fullName || "",
           phone: parsedData.phone || "",
@@ -50,7 +41,6 @@ const TableSelection = () => {
           agree: true,
         });
         
-        // Pre-select tables
         if (parsedData.tables && Array.isArray(parsedData.tables)) {
           setSelectedTables(parsedData.tables);
         }
@@ -60,13 +50,11 @@ const TableSelection = () => {
     }
   }, []);
 
-  // Second useEffect - Load tables and reserved tables
+  // Load tables and reserved tables
   useEffect(() => {
-    // Check if we have date and time from either location state or update data
     const effectiveDate = isUpdateMode && updateData ? updateData.date : date;
     const effectiveTime = isUpdateMode && updateData ? updateData.time : time;
     
-    // If we don't have date/time information and we're not in update mode, redirect to home
     if (!effectiveDate || !effectiveTime) {
       if (!isUpdateMode || !updateData) {
         navigate("/");
@@ -83,10 +71,8 @@ const TableSelection = () => {
     axios
       .get(`http://localhost:5001/reserved-tables?date=${effectiveDate}&time=${effectiveTime}`)
       .then((response) => {
-        // Get all reserved tables
         let allReservedTables = response.data;
         
-        // If we're in update mode, don't consider the user's own tables as reserved
         if (isUpdateMode && updateData && updateData.tables) {
           allReservedTables = allReservedTables.filter(
             tableId => !updateData.tables.includes(tableId)
@@ -100,14 +86,16 @@ const TableSelection = () => {
       });
   }, [date, time, navigate, isUpdateMode, updateData]);
 
-  const toggleTableSelection = (tableId) => {
+  const toggleTableSelection = (tableNumber) => {
+    const tableNumberStr = String(tableNumber);
+    
     // Don't allow selection of reserved tables
-    if (reservedTables.includes(tableId)) return;
+    if (reservedTables.includes(tableNumberStr)) return;
     
     setSelectedTables((prev) =>
-      prev.includes(tableId)
-        ? prev.filter((id) => id !== tableId)
-        : [...prev, tableId]
+      prev.includes(tableNumberStr)
+        ? prev.filter((id) => id !== tableNumberStr)
+        : [...prev, tableNumberStr]
     );
   };
 
@@ -136,7 +124,6 @@ const TableSelection = () => {
       return;
     }
   
-    // Get the effective date and time
     const effectiveDate = isUpdateMode && updateData ? updateData.date : date;
     const effectiveTime = isUpdateMode && updateData ? updateData.time : time;
     
@@ -151,12 +138,8 @@ const TableSelection = () => {
     };
 
     try {
-      // If in update mode, we need to delete the old reservation and create a new one
       if (isUpdateMode && originalOrderId) {
-        // Delete the existing reservation
         await axios.delete(`http://localhost:5001/reservation/${originalOrderId}`);
-        
-        // Create a new reservation
         const response = await axios.post("http://localhost:5001/reserve", reservationData);
         const { orderId } = response.data;
         
@@ -165,7 +148,6 @@ const TableSelection = () => {
           return;
         }
         
-        // Navigate to confirmation page
         navigate("/confirmation", {
           state: { 
             ...reservationData,
@@ -174,7 +156,6 @@ const TableSelection = () => {
           },
         });
       } else {
-        // Regular reservation flow
         const response = await axios.post("http://localhost:5001/reserve", reservationData);
         const { orderId } = response.data;
         
@@ -188,7 +169,6 @@ const TableSelection = () => {
         });
       }
       
-      // Clear the localStorage after successful submission
       localStorage.removeItem("updateOrderData");
     } catch (err) {
       console.error("Error:", err);
@@ -196,106 +176,252 @@ const TableSelection = () => {
     }
   };
 
-  return (
-    <div
-      className="flex justify-between items-start min-h-screen bg-repeat bg-[length:100px_100px] bg-center p-10"
-      style={{ backgroundImage: `url(${bgImage})` }}
-    >
-      <Navbar />
+  // Table component with realistic design
+  const TableComponent = ({ table }) => {
+    const isSelected = selectedTables.includes(String(table.tableNumber));
+    const isReserved = reservedTables.includes(String(table.tableNumber));
+    
+    let tableColor = "bg-green-500 hover:bg-green-400"; // Available
+    let borderColor = "border-green-600";
+    let textColor = "text-green-900";
+    
+    if (isReserved) {
+      tableColor = "bg-red-500";
+      borderColor = "border-red-600";
+      textColor = "text-red-900";
+    } else if (isSelected) {
+      tableColor = "bg-yellow-500 hover:bg-yellow-400";
+      borderColor = "border-yellow-600";
+      textColor = "text-yellow-900";
+    }
 
-      {/* Table Selection Area */}
-      <div className="grid grid-cols-5 gap-8 w-[600px] min-h-[650px] p-20 pb-24 bg-[url('./images/frame6.jpg')] bg-cover bg-center bg-padding-box rounded-lg shadow-lg">
-        {tables.map((table) => (
-          <button
-            key={table.id}
-            className={`w-15 h-15 border rounded-lg transition-all ${
-              selectedTables.includes(table.id)
-                ? "bg-yellow-500"
-                : reservedTables.includes(table.id)
-                ? "bg-red-500"
-                : "bg-green-500"
-            }`}
-            onClick={() => toggleTableSelection(table.id)}
-            disabled={reservedTables.includes(table.id)}
-          ></button>
-        ))}
+    // Different sizes based on capacity
+    const getTableSize = (capacity) => {
+      switch (capacity) {
+        case 2: return "w-16 h-12";
+        case 3: return "w-18 h-14";
+        case 4: return "w-20 h-16";
+        case 5: return "w-22 h-18";
+        case 6: return "w-24 h-20";
+        default: return "w-16 h-12";
+      }
+    };
+
+    // Table shape based on capacity
+    const getTableShape = (capacity) => {
+      if (capacity <= 2) {
+        return "rounded-lg"; // Square for 2-seaters
+      } else if (capacity <= 4) {
+        return "rounded-full"; // Circle for 3-4 seaters
+      } else {
+        return "rounded-2xl"; // Oval for 5-6 seaters
+      }
+    };
+
+    return (
+      <div 
+        className="absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2"
+        style={{
+          left: `${(table.position?.x || 100) / 600 * 100}%`,
+          top: `${(table.position?.y || 100) / 600 * 100}%`
+        }}
+      >
+        <button
+          className={`
+            ${getTableSize(table.capacity)} 
+            ${tableColor} 
+            ${getTableShape(table.capacity)}
+            border-2 ${borderColor}
+            flex flex-col items-center justify-center
+            transition-all duration-200 shadow-lg
+            ${!isReserved ? 'hover:scale-105' : 'cursor-not-allowed'}
+          `}
+          onClick={() => toggleTableSelection(table.tableNumber)}
+          disabled={isReserved}
+        >
+          <span className={`font-bold text-sm ${textColor}`}>
+            {table.tableNumber}
+          </span>
+          <span className={`text-xs ${textColor}`}>
+            {table.capacity}p
+          </span>
+        </button>
+        
+        {/* Chair indicators */}
+        <div className="absolute inset-0 pointer-events-none">
+          {Array.from({ length: table.capacity }, (_, i) => {
+            const angle = (i / table.capacity) * 2 * Math.PI;
+            const radius = table.capacity <= 2 ? 45 : table.capacity <= 4 ? 50 : 55;
+            const chairX = Math.cos(angle) * radius;
+            const chairY = Math.sin(angle) * radius;
+            
+            return (
+              <div
+                key={i}
+                className="absolute w-3 h-3 bg-gray-700 rounded-sm transform -translate-x-1/2 -translate-y-1/2"
+                style={{
+                  left: `calc(50% + ${chairX}px)`,
+                  top: `calc(50% + ${chairY}px)`
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex">
+      {/* Restaurant Layout */}
+      <div className="flex-1 p-8">
+        <div className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-lg shadow-2xl h-full relative overflow-hidden">
+          {/* Restaurant Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-4 left-4 w-full h-full bg-gradient-to-br from-orange-200 to-amber-200"></div>
+          </div>
+          
+          {/* Restaurant Elements */}
+          <div className="absolute top-8 left-8 right-8 h-12 bg-gradient-to-r from-amber-600 to-orange-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">Restaurant Floor Plan</span>
+          </div>
+          
+          {/* Kitchen Area */}
+          <div className="absolute top-24 right-8 w-32 h-24 bg-gray-300 rounded-lg border-2 border-gray-400 flex items-center justify-center">
+            <span className="text-gray-700 font-semibold text-sm">Kitchen</span>
+          </div>
+          
+          {/* Bar Area */}
+          <div className="absolute bottom-8 left-8 w-48 h-16 bg-gradient-to-r from-amber-800 to-orange-800 rounded-lg flex items-center justify-center">
+            <span className="text-white font-semibold">Bar Counter</span>
+          </div>
+          
+          {/* Entrance */}
+          <div className="absolute bottom-8 right-8 w-24 h-16 bg-gradient-to-t from-green-600 to-green-500 rounded-lg flex items-center justify-center">
+            <span className="text-white font-semibold text-sm">Entrance</span>
+          </div>
+          
+          {/* Tables */}
+          <div className="absolute inset-8 top-32 bottom-32">
+            {tables.map((table) => (
+              <TableComponent key={table._id} table={table} />
+            ))}
+          </div>
+          
+          {/* Legend */}
+          <div className="absolute top-32 left-8 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg">
+            <h3 className="font-bold text-gray-800 mb-2">Legend</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
+                <span className="text-gray-700">Available</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-yellow-500 rounded mr-2"></div>
+                <span className="text-gray-700">Selected</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-red-500 rounded mr-2"></div>
+                <span className="text-gray-700">Reserved</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Customer Details Form */}
-      <div className="w-[400px] bg-black/30 backdrop-blur-md p-8 shadow-lg rounded-lg mt-10">       
-      <h2 className="text-4xl font-semibold mb-4 text-white">
-        {isUpdateMode ? "Update Reservation" : "Customer Details"}
-      </h2>
+      <div className="w-96 bg-black/30 backdrop-blur-md p-8 shadow-lg">       
+        <h2 className="text-3xl font-semibold mb-6 text-white">
+          {isUpdateMode ? "Update Reservation" : "Customer Details"}
+        </h2>
+        
         {isUpdateMode && updateData && (
-          <div className="mb-4 p-2 bg-gray-800 rounded text-white">
-            <p>Updating reservation for: {updateData.date} at {updateData.time}</p>
+          <div className="mb-4 p-3 bg-gray-800 rounded text-white">
+            <p className="text-sm">Updating reservation for:</p>
+            <p className="font-semibold">{updateData.date} at {updateData.time}</p>
           </div>
         )}
 
-        <input
-          type="text"
-          name="fullName"
-          placeholder="Full Name"
-          value={formData.fullName}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border rounded mb-12 bg-black text-white"
-        />
-
-        <input
-          type="text"
-          name="phone"
-          placeholder="Phone Number"
-          value={formData.phone}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border rounded mb-12 bg-black text-white"
-        />
-
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border rounded mb-12 bg-black text-white"
-        />
-
-        <label className="block font-medium mb-1 text-white">Number of Guests:</label>
-        <select
-          name="guests"
-          value={formData.guests}
-          onChange={handleChange}
-          required
-          className="w-full p-3 border rounded mb-12 bg-black text-white"
-        >
-          {[...Array(20).keys()].map((num) => (
-            <option key={num + 1} value={num + 1}>
-              {num + 1}
-            </option>
-          ))}
-        </select>
-
-        <label className="flex items-center mb-12 text-white text-xl">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <input
-            type="checkbox"
-            name="agree"
-            checked={formData.agree}
+            type="text"
+            name="fullName"
+            placeholder="Full Name"
+            value={formData.fullName}
             onChange={handleChange}
             required
-            className="mr-2 text-2xl"
+            className="w-full p-3 border rounded bg-black/70 text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
           />
-          I agree to the terms and conditions
-        </label>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white p-4 rounded-lg mt-2 text-lg"
-          onClick={handleSubmit}
-        >
-          {isUpdateMode ? "Update Reservation" : "Reserve"}
-        </button>
+          <input
+            type="text"
+            name="phone"
+            placeholder="Phone Number"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border rounded bg-black/70 text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+          />
+
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full p-3 border rounded bg-black/70 text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+          />
+
+          <div>
+            <label className="block font-medium mb-2 text-white">Number of Guests:</label>
+            <select
+              name="guests"
+              value={formData.guests}
+              onChange={handleChange}
+              required
+              className="w-full p-3 border rounded bg-black/70 text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+            >
+              {[...Array(20).keys()].map((num) => (
+                <option key={num + 1} value={num + 1}>
+                  {num + 1} {num + 1 === 1 ? 'Guest' : 'Guests'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {selectedTables.length > 0 && (
+            <div className="bg-gray-800/50 p-3 rounded">
+              <h4 className="text-white font-medium mb-2">Selected Tables:</h4>
+              <div className="flex flex-wrap gap-2">
+                {selectedTables.map((tableNum) => (
+                  <span key={tableNum} className="bg-yellow-500 text-black px-2 py-1 rounded-full text-sm font-medium">
+                    Table {tableNum}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <label className="flex items-center text-white text-lg">
+            <input
+              type="checkbox"
+              name="agree"
+              checked={formData.agree}
+              onChange={handleChange}
+              required
+              className="mr-3 w-4 h-4 text-yellow-500 focus:ring-yellow-500"
+            />
+            I agree to the terms and conditions
+          </label>
+
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black p-4 rounded-lg mt-4 text-lg font-bold transition-all duration-200 transform hover:scale-105 shadow-lg"
+          >
+            {isUpdateMode ? "Update Reservation" : "Reserve Tables"}
+          </button>
+        </form>
       </div>
     </div>
   );
