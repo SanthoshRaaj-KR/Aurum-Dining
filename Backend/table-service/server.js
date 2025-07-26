@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
-import connectDB from "./config/db.js";
-import initializeTables from "./utils/initializeTables.js";
+import connectDB from "./src/config/db.js";
+import initializeTables from "./src/utils/initialize.js";
 
-import adminRoutes from "./routes/adminRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import reservationSync from "./routes/reservationSync.js";
+import adminRoutes from "./src/routes/adminRoutes.js";
+import userRoutes from "./src/routes/userRoutes.js";
+import reservationSync from "./src/routes/reservationSync.js";
 
 const app = express();
 const PORT = 5002;
