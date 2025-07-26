@@ -14,7 +14,23 @@ const UserProfile = () => {
 
   // Get current user data
   const getCurrentUser = () => {
-    // Replace this with your actual user authentication logic
+    // Get the user object from localStorage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        return { 
+          userId: user._id, 
+          userName: user.name, 
+          userEmail: user.email 
+        };
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        return { userId: null, userName: null, userEmail: null };
+      }
+    }
+    
+    // Fallback to old keys for backward compatibility
     const userId = localStorage.getItem('userId') || localStorage.getItem('currentUserId');
     const userName = localStorage.getItem('userName') || localStorage.getItem('currentUserName');
     const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('currentUserEmail');

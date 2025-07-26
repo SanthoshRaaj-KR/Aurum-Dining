@@ -26,7 +26,19 @@ const TableSelection = () => {
 
   // Get current user ID from localStorage (assuming it's stored there after login)
   const getCurrentUserId = () => {
-    // You should replace this with your actual user authentication logic
+    // Get the user object from localStorage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        return user._id; // The user ID is stored as _id in the user object
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        return null;
+      }
+    }
+    
+    // Fallback to old keys for backward compatibility
     return localStorage.getItem('userId') || localStorage.getItem('currentUserId');
   };
 
