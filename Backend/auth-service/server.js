@@ -16,7 +16,7 @@ const app = express();
 
 app.use(cors({
   origin: [
-    "http://localhost:3000", 
+    "http://localhost:5000", 
     "http://localhost:5173", // Vite default port
     "https://accounts.google.com" // Allow Google OAuth
   ],
@@ -45,5 +45,5 @@ app.use(passport.session());
 app.use("/api/auth", authRoutes);
 
 // ✅ START SERVER
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Auth service running on port ${PORT}`));

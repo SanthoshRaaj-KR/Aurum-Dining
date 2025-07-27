@@ -70,15 +70,6 @@ const DateTimeSelection = () => {
         </button>
 
         {/* Modify or Cancel Reservation Link */}
-        <p className="text-white text-center mt-4 flex items-center justify-start space-x-2 w-full sm:w-auto">
-          <span>Modify or cancel your reservation?</span>
-          <a
-            onClick={handleManageReservation} // Use the function to navigate to the UpdateOrDeleteOrder page
-            className="text-blue-400 underline ml-1 hover:text-blue-600 cursor-pointer"
-          >
-            Manage Reservation
-          </a>
-        </p>
       </div>
 
       {/* Right Side (Image with Text) */}
