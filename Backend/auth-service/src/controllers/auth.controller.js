@@ -11,8 +11,6 @@ let refreshTokens = []; // in-memory for dev
 
 // ✅ Unified Google Login / Register
 export const googleAuth = async (req, res) => {
-  console.log("📝 Request body:", req.body);
-  console.log("📝 Google Client ID:", process.env.GOOGLE_CLIENT_ID ? "✅ Set" : "❌ Missing");
   
   const { credential } = req.body;
 
@@ -29,7 +27,6 @@ export const googleAuth = async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    console.log("✅ Token verified, payload:", payload);
     const { email, name, sub: googleId, picture } = payload;
 
     let user = await User.findOne({ email });
