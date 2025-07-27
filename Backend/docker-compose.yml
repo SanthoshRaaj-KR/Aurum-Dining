@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "5001:5001"
+    container_name: auth-service
+    restart: always
+    networks:
+      - aurum-net
+    env_file:            
+      - ./auth-service/.env 
+
+  table-service:
+    build: ./table-service
+    ports:
+      - "5002:5002"
+    container_name: table-service
+    restart: always
+    networks:
+      - aurum-net
+    env_file:       
+      - ./table-service/.env
+    depends_on:          
+      - mongo           
+
+  takeaway-service:
+    build: ./takeaway-service
+    ports:
+      - "5003:5003"
+    container_name: takeaway-service
+    restart: always
+    networks:
+      - aurum-net
+    env_file:            
+      - ./takeaway-service/.env
+    depends_on:          
+      - mongo             
+
+  # Example MongoDB service:
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db
+    ports:
+      - "27017:27017" # Expose MongoDB default port
+    volumes:
+      - mongo_data:/data/db 
+    networks:
+      - aurum-net
+    restart: always
+
+networks:
+  aurum-net:
+    driver: bridge
+
+volumes:
+  mongo_data:
