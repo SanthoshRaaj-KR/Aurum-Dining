@@ -9,11 +9,12 @@ const AdminDashboard = () => {
   const [reservations, setReservations] = useState([]);
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('orders');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState('');
   const [showAddTable, setShowAddTable] = useState(false);
+  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
   const [newTable, setNewTable] = useState({
     tableNumber: '',
     capacity: 2,
@@ -47,10 +48,25 @@ const AdminDashboard = () => {
   
   const fetchOrders = async () => {
     try {
+      console.log('Takeaway service URL:', import.meta.env.VITE_TAKEAWAY_SERVICE_URL);
+      console.log('Fetching orders from:', `${import.meta.env.VITE_TAKEAWAY_SERVICE_URL}/api/takeaway/admin/orders`);
+      
+      if (!import.meta.env.VITE_TAKEAWAY_SERVICE_URL) {
+        console.error('VITE_TAKEAWAY_SERVICE_URL is not defined');
+        setOrders([]);
+        return;
+      }
+      
       const response = await axios.get(`${import.meta.env.VITE_TAKEAWAY_SERVICE_URL}/api/takeaway/admin/orders`);
-      setOrders(response.data);
+      console.log('Orders response:', response.data);
+      console.log('Orders array:', response.data.orders);
+      console.log('First order structure:', response.data.orders?.[0]);
+      setOrders(response.data.orders || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
+      console.error('Error details:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      setOrders([]);
     }
   };
   
@@ -130,6 +146,45 @@ const AdminDashboard = () => {
       console.error('Error adding table:', error);
       alert('Error adding table. Table number might already exist.');
     }
+  };
+
+  const handleOrderStatusUpdate = async (orderId, newStatus) => {
+    try {
+      await axios.put(`${import.meta.env.VITE_TAKEAWAY_SERVICE_URL}/api/takeaway/admin/${orderId}/status`, {
+        status: newStatus
+      });
+      fetchOrders(); // Refresh orders
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      alert('Error updating order status. Please try again.');
+    }
+  };
+
+  const getOrderStats = () => {
+    const total = orders.length;
+    const pending = orders.filter(order => order.status === 'pending').length;
+    const confirmed = orders.filter(order => order.status === 'confirmed').length;
+    const preparing = orders.filter(order => order.status === 'preparing').length;
+    const outForDelivery = orders.filter(order => order.status === 'out_for_delivery').length;
+    const delivered = orders.filter(order => order.status === 'delivered').length;
+    const cancelled = orders.filter(order => order.status === 'cancelled').length;
+
+    return { total, pending, confirmed, preparing, outForDelivery, delivered, cancelled };
+  };
+
+  const getFilteredOrders = () => {
+    if (orderStatusFilter === 'all') {
+      return orders;
+    }
+    return orders.filter(order => order.status === orderStatusFilter);
+  };
+
+  const getReservationStats = () => {
+    const total = reservations.length;
+    const active = reservations.filter(res => res.status === 'active').length;
+    const cancelled = reservations.filter(res => res.status === 'cancelled').length;
+
+    return { total, active, cancelled };
   };
   
   const handleLogout = () => {
@@ -299,19 +354,70 @@ const AdminDashboard = () => {
       {/* Orders Tab */}
       {activeTab === 'orders' && (
         <div className="bg-black bg-opacity-90 rounded-lg border border-gray-800 shadow-lg p-6">
-          <h2 className="text-xl font-bold mb-4 border-b border-gray-700 pb-2 text-white">Takeaway Orders</h2>
+          <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+            <h2 className="text-xl font-bold text-white">Takeaway Orders</h2>
+            <div className="flex items-center gap-4">
+              <label className="text-gray-300 text-sm">Filter by Status:</label>
+              <select
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                className="bg-gray-800 text-white px-3 py-1 rounded border border-gray-600 text-sm"
+              >
+                <option value="all">All Orders</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="preparing">Preparing</option>
+                <option value="out_for_delivery">Out for Delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
           
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-            {orders.length > 0 ? (
-              orders.map((order) => (
+          {/* Order Statistics */}
+          <div className="grid grid-cols-2 md:grid-cols-7 gap-4 mb-6">
+            {(() => {
+              const stats = getOrderStats();
+              return [
+                { label: 'Total', value: stats.total, color: 'text-white' },
+                { label: 'Pending', value: stats.pending, color: 'text-yellow-400' },
+                { label: 'Confirmed', value: stats.confirmed, color: 'text-blue-400' },
+                { label: 'Preparing', value: stats.preparing, color: 'text-orange-400' },
+                { label: 'Out for Delivery', value: stats.outForDelivery, color: 'text-purple-400' },
+                { label: 'Delivered', value: stats.delivered, color: 'text-green-400' },
+                { label: 'Cancelled', value: stats.cancelled, color: 'text-red-400' }
+              ].map((stat, index) => (
+                <div key={index} className="bg-gray-900 p-3 rounded-lg border border-gray-700 text-center">
+                  <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
+                  <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+                </div>
+              ));
+            })()}
+          </div>
+          
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+            {getFilteredOrders().length > 0 ? (
+              getFilteredOrders().map((order) => (
                 <OrderCard 
                   key={order.orderId}
                   order={order}
                   onCancel={() => confirmDelete(order.orderId, 'order')}
+                  onStatusUpdate={handleOrderStatusUpdate}
                 />
               ))
             ) : (
-              <p className="text-gray-400 italic">No takeaway orders found</p>
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🥡</div>
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  {orderStatusFilter === 'all' ? 'No Takeaway Orders' : `No ${orderStatusFilter} Orders`}
+                </h3>
+                <p className="text-gray-400">
+                  {orderStatusFilter === 'all' 
+                    ? 'No takeaway orders have been placed yet.' 
+                    : `No orders with status "${orderStatusFilter}" found.`
+                  }
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -432,45 +538,121 @@ const AdminDashboard = () => {
   );
 };
 
-const OrderCard = ({ order, onCancel }) => {
+const OrderCard = ({ order, onCancel, onStatusUpdate }) => {
+  if (!order) {
+    return <div className="bg-gray-900 rounded-lg shadow p-4 border-l-4 border-yellow-500">
+      <p className="text-white">Order data not available</p>
+    </div>;
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-900 text-yellow-200';
+      case 'confirmed': return 'bg-blue-900 text-blue-200';
+      case 'preparing': return 'bg-orange-900 text-orange-200';
+      case 'out_for_delivery': return 'bg-purple-900 text-purple-200';
+      case 'delivered': return 'bg-green-900 text-green-200';
+      case 'cancelled': return 'bg-red-900 text-red-200';
+      default: return 'bg-gray-900 text-gray-200';
+    }
+  };
+
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'out_for_delivery': return 'Out for Delivery';
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  const canUpdateStatus = (currentStatus) => {
+    return !['delivered', 'cancelled'].includes(currentStatus);
+  };
+
+  const getNextStatus = (currentStatus) => {
+    const statusFlow = {
+      'pending': 'confirmed',
+      'confirmed': 'preparing',
+      'preparing': 'out_for_delivery',
+      'out_for_delivery': 'delivered'
+    };
+    return statusFlow[currentStatus];
+  };
+  
   return (
     <div className="bg-gray-900 rounded-lg shadow p-4 border-l-4 border-yellow-500">
       <div className="flex justify-between items-start">
-        <div>
-          <h3 className="font-bold text-lg text-white">Order #{order.orderId.substring(0, 8)}</h3>
-          <p className="text-sm text-gray-400">
-            {new Date(order.createdAt).toLocaleString()}
+        <div className="flex-1">
+          <div className="flex items-center gap-4 mb-3">
+            <h3 className="font-bold text-lg text-white">Order #{order.orderId?.substring(0, 8) || 'N/A'}</h3>
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+              {getStatusDisplay(order.status)}
+            </span>
+          </div>
+          
+          <p className="text-sm text-gray-400 mb-3">
+            {order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A'}
           </p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="bg-red-500 text-white px-3 py-1 rounded-md text-sm"
-          onClick={onCancel}
-        >
-          Cancel
-        </motion.button>
+        
+        <div className="flex flex-col gap-2">
+          {canUpdateStatus(order.status) && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => onStatusUpdate(order.orderId, getNextStatus(order.status))}
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm"
+            >
+              Update Status
+            </motion.button>
+          )}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-red-500 text-white px-3 py-1 rounded-md text-sm"
+            onClick={onCancel}
+          >
+            Cancel
+          </motion.button>
+        </div>
       </div>
       
       <div className="mt-3 text-gray-300">
-        <p><span className="font-medium text-white">Customer:</span> {order.fullName}</p>
-        <p><span className="font-medium text-white">Phone:</span> {order.phone}</p>
-        <p><span className="font-medium text-white">Address:</span> {order.address}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <p><span className="font-medium text-white">Customer:</span> {order.fullName || 'N/A'}</p>
+            <p><span className="font-medium text-white">Phone:</span> {order.phone || 'N/A'}</p>
+          </div>
+          <div>
+            <p><span className="font-medium text-white">Address:</span> {order.address || 'N/A'}</p>
+            <p><span className="font-medium text-white">Total:</span> ₹{order.billing?.total?.toFixed(2) || '0.00'}</p>
+          </div>
+        </div>
         
-        <div className="mt-2">
-          <h4 className="font-medium text-white">Items:</h4>
-          <ul className="ml-4 mt-1">
-            {order.items.map((item, index) => (
-              <li key={index} className="text-sm">
-                {item.quantity}x {item.name} - ₹{item.price.toFixed(2)}
-              </li>
+        <div className="mb-4">
+          <h4 className="font-medium text-white mb-2">Items:</h4>
+          <div className="bg-black/30 p-3 rounded border">
+            {order.items?.map((item, index) => (
+              <div key={index} className="flex justify-between text-sm mb-1 last:mb-0">
+                <span className="text-gray-300">{item.quantity}× {item.name}</span>
+                <span className="text-green-400">₹{(item.quantity * (item.price || 0)).toFixed(2)}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
-        
-        <div className="mt-2 border-t border-gray-700 pt-2">
-          <p className="font-bold mt-1 text-white">Total: ₹{order.total.toFixed(2)}</p>
-        </div>
+
+        {order.estimatedDeliveryTime && (
+          <div className="mb-2">
+            <p className="text-gray-400 text-sm">Estimated Delivery:</p>
+            <p className="text-white">{new Date(order.estimatedDeliveryTime).toLocaleString()}</p>
+          </div>
+        )}
+
+        {order.notes && (
+          <div className="mb-2">
+            <p className="text-gray-400 text-sm">Notes:</p>
+            <p className="text-white">{order.notes}</p>
+          </div>
+        )}
       </div>
     </div>
   );

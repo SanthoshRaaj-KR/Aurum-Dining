@@ -37,6 +37,23 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Test endpoint to check if orders exist
+app.get("/test-orders", async (req, res) => {
+  try {
+    const count = await TakeawayOrder.countDocuments();
+    res.json({ 
+      message: "Takeaway service test endpoint",
+      orderCount: count,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      message: "Error testing orders", 
+      error: error.message 
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Server Error:", err.stack);

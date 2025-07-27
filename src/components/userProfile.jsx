@@ -394,100 +394,141 @@ const UserProfile = () => {
           {activeTab === 'takeaway' && (
             <div>
               {takeawayOrders.length > 0 ? (
-                <div className="space-y-4">
-                  {takeawayOrders.map((order, index) => (
-                    <motion.div
-                      key={order.orderId}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-gray-900/50 border border-gray-600 rounded-lg p-6 hover:border-gray-500 transition-colors"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-4 mb-3">
-                            <h3 className="text-xl font-bold text-white">
-                              Order #{order.orderId.substring(0, 8)}
-                            </h3>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                              {getStatusDisplay(order.status)}
-                            </span>
-                          </div>
+                <div>
+                  {/* Order Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
+                    {(() => {
+                      const total = takeawayOrders.length;
+                      const pending = takeawayOrders.filter(order => order.status === 'pending').length;
+                      const confirmed = takeawayOrders.filter(order => order.status === 'confirmed').length;
+                      const preparing = takeawayOrders.filter(order => order.status === 'preparing').length;
+                      const outForDelivery = takeawayOrders.filter(order => order.status === 'out_for_delivery').length;
+                      const delivered = takeawayOrders.filter(order => order.status === 'delivered').length;
+                      const cancelled = takeawayOrders.filter(order => order.status === 'cancelled').length;
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                              <p className="text-gray-400 text-sm">Order Date</p>
-                              <p className="text-white font-medium">{formatDate(order.createdAt)}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-400 text-sm">Total Amount</p>
-                              <p className="text-green-400 font-bold text-lg">₹{order.billing.total.toFixed(2)}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-400 text-sm">Delivery Address</p>
-                              <p className="text-white font-medium">{order.address}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-400 text-sm">Items Count</p>
-                              <p className="text-white font-medium">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</p>
-                            </div>
-                          </div>
-
-                          {/* Order Items */}
-                          <div className="mb-4">
-                            <p className="text-gray-400 text-sm mb-2">Items Ordered:</p>
-                            <div className="bg-black/30 p-3 rounded border">
-                              {order.items.map((item, idx) => (
-                                <div key={idx} className="flex justify-between text-sm mb-1 last:mb-0">
-                                  <span className="text-gray-300">{item.quantity}× {item.name}</span>
-                                  <span className="text-green-400">₹{(item.quantity * item.price).toFixed(2)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Estimated Delivery */}
-                          {order.estimatedDeliveryTime && (
-                            <div className="mb-4">
-                              <p className="text-gray-400 text-sm">Estimated Delivery</p>
-                              <p className="text-white font-medium">{formatDate(order.estimatedDeliveryTime)}</p>
-                            </div>
-                          )}
-
-                          {/* Notes */}
-                          {order.notes && (
-                            <div className="mb-4">
-                              <p className="text-gray-400 text-sm">Notes</p>
-                              <p className="text-white font-medium">{order.notes}</p>
-                            </div>
-                          )}
-
-                          <div className="text-xs text-gray-500">
-                            Created: {formatDate(order.createdAt)}
-                            {order.updatedAt !== order.createdAt && (
-                              <span className="ml-4">
-                                Updated: {formatDate(order.updatedAt)}
-                              </span>
-                            )}
-                          </div>
+                      return [
+                        { label: 'Total', value: total, color: 'text-white' },
+                        { label: 'Pending', value: pending, color: 'text-yellow-400' },
+                        { label: 'Confirmed', value: confirmed, color: 'text-blue-400' },
+                        { label: 'Delivered', value: delivered, color: 'text-green-400' },
+                        { label: 'Cancelled', value: cancelled, color: 'text-red-400' }
+                      ].map((stat, index) => (
+                        <div key={index} className="bg-gray-900/50 p-3 rounded-lg border border-gray-600 text-center">
+                          <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
+                          <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
                         </div>
+                      ));
+                    })()}
+                  </div>
 
-                        {/* Action Buttons */}
-                        {canCancelTakeaway(order) && (
-                          <div className="flex flex-col gap-2 ml-6">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => confirmCancel(order, 'takeaway')}
-                              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                            >
-                              Cancel Order
-                            </motion.button>
+                  <div className="space-y-4">
+                    {takeawayOrders.map((order, index) => (
+                      <motion.div
+                        key={order.orderId}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-gray-900/50 border border-gray-600 rounded-lg p-6 hover:border-gray-500 transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4 mb-3">
+                              <h3 className="text-xl font-bold text-white">
+                                Order #{order.orderId.substring(0, 8)}
+                              </h3>
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                                {getStatusDisplay(order.status)}
+                              </span>
+                              {order.status === 'delivered' && order.actualDeliveryTime && (
+                                <span className="px-3 py-1 bg-green-900 text-green-200 rounded-full text-sm font-medium">
+                                  Delivered
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <p className="text-gray-400 text-sm">Order Date</p>
+                                <p className="text-white font-medium">{formatDate(order.createdAt)}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-sm">Total Amount</p>
+                                <p className="text-green-400 font-bold text-lg">₹{order.billing?.total?.toFixed(2) || '0.00'}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-sm">Delivery Address</p>
+                                <p className="text-white font-medium">{order.address}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-sm">Items Count</p>
+                                <p className="text-white font-medium">{order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? 's' : ''}</p>
+                              </div>
+                            </div>
+
+                            {/* Order Items */}
+                            <div className="mb-4">
+                              <p className="text-gray-400 text-sm mb-2">Items Ordered:</p>
+                              <div className="bg-black/30 p-3 rounded border">
+                                {order.items?.map((item, idx) => (
+                                  <div key={idx} className="flex justify-between text-sm mb-1 last:mb-0">
+                                    <span className="text-gray-300">{item.quantity}× {item.name}</span>
+                                    <span className="text-green-400">₹{(item.quantity * (item.price || 0)).toFixed(2)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Delivery Information */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              {order.estimatedDeliveryTime && (
+                                <div>
+                                  <p className="text-gray-400 text-sm">Estimated Delivery</p>
+                                  <p className="text-white font-medium">{formatDate(order.estimatedDeliveryTime)}</p>
+                                </div>
+                              )}
+                              {order.actualDeliveryTime && (
+                                <div>
+                                  <p className="text-gray-400 text-sm">Actual Delivery</p>
+                                  <p className="text-white font-medium">{formatDate(order.actualDeliveryTime)}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Notes */}
+                            {order.notes && (
+                              <div className="mb-4">
+                                <p className="text-gray-400 text-sm">Notes</p>
+                                <p className="text-white font-medium">{order.notes}</p>
+                              </div>
+                            )}
+
+                            <div className="text-xs text-gray-500">
+                              Created: {formatDate(order.createdAt)}
+                              {order.updatedAt !== order.createdAt && (
+                                <span className="ml-4">
+                                  Updated: {formatDate(order.updatedAt)}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+
+                          {/* Action Buttons */}
+                          {canCancelTakeaway(order) && (
+                            <div className="flex flex-col gap-2 ml-6">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => confirmCancel(order, 'takeaway')}
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                              >
+                                Cancel Order
+                              </motion.button>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-12">
