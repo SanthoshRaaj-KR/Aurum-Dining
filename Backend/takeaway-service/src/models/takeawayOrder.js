@@ -1,4 +1,4 @@
-// Backend/table-service/src/models/takeawayOrder.js
+// Backend/takeaway-service/src/models/takeawayOrder.js
 import mongoose from "mongoose";
 
 const takeawayOrderSchema = new mongoose.Schema({

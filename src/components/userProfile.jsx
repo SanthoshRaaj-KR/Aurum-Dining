@@ -58,7 +58,7 @@ const UserProfile = () => {
       // Fetch both reservations and takeaway orders in parallel
       const [reservationsResponse, takeawayResponse] = await Promise.all([
         axios.get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/user/${userId}/reservations`),
-        axios.get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/user/${userId}/takeaway-orders`)
+        axios.get(`${import.meta.env.VITE_TAKEAWAY_SERVICE_URL}/api/takeaway/user/${userId}`)
       ]);
       
       setReservations(reservationsResponse.data);
@@ -95,7 +95,7 @@ const UserProfile = () => {
           prevReservations.filter(res => res.orderId !== itemToCancel.orderId)
         );
       } else if (cancelType === 'takeaway') {
-        await axios.delete(`${import.meta.env.VITE_TABLE_SERVICE_URL}/takeaway/${itemToCancel.orderId}`);
+        await axios.delete(`${import.meta.env.VITE_TAKEAWAY_SERVICE_URL}/api/takeaway/${itemToCancel.orderId}`);
         setTakeawayOrders(prevOrders => 
           prevOrders.filter(order => order.orderId !== itemToCancel.orderId)
         );

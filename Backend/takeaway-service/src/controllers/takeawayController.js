@@ -1,4 +1,4 @@
-// Backend/table-service/src/controllers/takeawayController.js
+// Backend/takeaway-service/src/controllers/takeawayController.js
 import TakeawayOrder from "../models/takeawayOrder.js";
 
 // Create a new takeaway order

@@ -47,7 +47,7 @@ const AdminDashboard = () => {
   
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/takeaway-orders`);
+      const response = await axios.get(`${import.meta.env.VITE_TAKEAWAY_SERVICE_URL}/api/takeaway/admin/orders`);
       setOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
   const handleConfirmDelete = async () => {
     try {
       if (deleteType === 'order') {
-        await axios.delete(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/takeaway-orders/${itemToDelete}`);
+        await axios.delete(`${import.meta.env.VITE_TAKEAWAY_SERVICE_URL}/api/takeaway/${itemToDelete}`);
         fetchOrders();
       } else if (deleteType === 'reservation') {
         await axios.delete(`${import.meta.env.VITE_TABLE_SERVICE_URL}/admin/reservations/${itemToDelete}`);
