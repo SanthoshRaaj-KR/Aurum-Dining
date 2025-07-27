@@ -4,10 +4,9 @@ import connectDB from "./src/config/db.js";
 import takeawayRoutes from "./src/routes/takeawayRoutes.js";
 import dotenv from "dotenv";
 
-// Import models to ensure they are registered with mongoose
 import TakeawayOrder from "./src/models/takeawayOrder.js";
 
-dotenv.config();
+dotenv.config({ silent: true });
 
 const app = express();
 const PORT = process.env.PORT || 3003;

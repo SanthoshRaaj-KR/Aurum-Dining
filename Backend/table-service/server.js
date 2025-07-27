@@ -5,7 +5,7 @@ import connectDB from "./src/config/db.js";
 import initializeTables from "./src/utils/initialize.js";
 import routes from "./src/routes/index.js"; 
 
-dotenv.config();
+dotenv.config({ silent: true });
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -20,7 +20,7 @@ connectDB().then(() => {
 });
 
 // Use your imported routes
-app.use("/", routes); // ONLY THIS LINE should register your application routes
+app.use("/", routes); 
 
 // Health check endpoint (can be here or in routes/index.js)
 app.get("/health", (req, res) => {
@@ -45,5 +45,3 @@ app.listen(PORT, () => {
   console.log(`Table service running on port ${PORT}`);
 });
 
-// Export default app only if another file needs to import it for testing, etc.
-// export default app; // This line is optional and depends on your project structure

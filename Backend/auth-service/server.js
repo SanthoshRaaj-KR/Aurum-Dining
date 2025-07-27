@@ -8,7 +8,7 @@ import authRoutes from "./src/routes/auth.routes.js";
 import { connectDB } from "./src/config/db.js";
 import "./src/config/passport.js";
 
-dotenv.config();
+dotenv.config({ silent: true });
 connectDB();
 
 const app = express();
